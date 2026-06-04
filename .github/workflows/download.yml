@@ -17,6 +17,14 @@ jobs:
         run: |
           wget -q "https://kindle.s3.amazonaws.com/Kindle_src_5.6.5_2730300038.tar.gz"
           tar xzf Kindle_src_5.6.5_2730300038.tar.gz
+          rm Kindle_src_5.6.5_2730300038.tar.gz
+          cd gplrelease
+          tar xzf linux-3.0.35.tar.gz 
+          rm linux-3.0.35.tar.gz 
+          tar xzf build_linaro-gcc_4.8.3.tar.gz
+          rm build_linaro-gcc_4.8.3.tar.gz
+          tar xzf uboot.tar.gz
+          rm uboot.tar.gz
 
       - name: Commit
         run: |
