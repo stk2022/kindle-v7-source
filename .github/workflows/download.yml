@@ -23,6 +23,8 @@ jobs:
           rm linux-3.0.35.tar.gz 
           tar xzf build_linaro-gcc_4.8.3.tar.gz
           rm build_linaro-gcc_4.8.3.tar.gz
+          tar xzf gcc-linaro-4.8-2014.04.tar.gz
+          rm gcc-linaro-4.8-2014.04.tar.gz
 
       - name: Commit
         run: |
