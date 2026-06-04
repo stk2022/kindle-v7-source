@@ -1,0 +1,144 @@
+THESE INSTRUCTIONS ARE PROVIDED "AS IS," AND WITHOUT WARRANTIES OR CONDITIONS
+OF ANY KIND, EXPRESS, IMPLIED, OR STATUTORY, INCLUDING WARRANTIES OR CONDITIONS
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE OR NON-INFRINGEMENT.
+YOUR USE OF THE INSTRUCTIONS IS AT YOUR SOLE RISK. IN NO EVENT WILL AMAZON.COM,
+INC. AND/OR ITS AFFILIATES BE LIABLE FOR ANY DAMAGES, INCLUDING WITHOUT
+LIMITATION ANY DIRECT, INDIRECT, CONSEQUENTIAL, SPECIAL, INCIDENTAL, OR
+PUNITIVE DAMAGES (INCLUDING FOR ANY LOSS OF GOODWILL, BUSINESS INTERRUPTION,
+LOST PROFITS OR DATA, OR COMPUTER FAILURE OR MALFUNCTION) ARISING FROM OR
+RELATING TO THE INSTRUCTIONS, HOWEVER CAUSED AND REGARDLESS OF THE THEORY OF
+LIABILITY, EVEN IF AMAZON.COM, INC. AND/OR ITS AFFILIATES HAS BEEN ADVISED OF
+THE POSSIBILITY OF SUCH DAMAGES.  AMAZON.COM, INC. AND ITS AFFILIATES HAVE NO
+OBLIGATION TO PROVIDE ANY SUPPORT OR OTHER SERVICES RELATED TO THE INSTRUCTIONS.
+THESE LIMITATIONS AND DISCLAIMERS APPLY EXCEPT TO THE EXTENT PROHIBITED BY
+APPLICABLE LAW.
+
+Prerequisites
+
+On Ubuntu 12.04, you will need the following packages installed:
+  bison
+  curl
+  flex
+  tar
+  libgmp-dev
+  libmpfr-dev
+  libmpc-dev
+
+
+Building the Toolchain
+
+To build the toolchain, you need the Makefile and the tarfiles.
+The make will untar the tarfiles and build everything.
+
+By default, the install directory for the toolchain is:
+
+  $HOME/opt/cross-linaro-gcc
+
+If you want the installation location to be somewhere else, update the value of
+PREFIX in the Makefile to the directory you want.
+
+Build the toolchain by running:
+
+$ make
+
+The build will produce a tarfile in the directory in which you ran 'make':
+
+  cross-arm-linux-gnueabi-gcc-linaro-4.8-2014.04.tar.gz
+
+You should now install the toolchain to the location pointed to by PREFIX in
+the Makefile. By default, that will be $HOME/opt/cross-gcc-linaro. Create the
+install directory (if needed), then untar the toolchain tarfile. For the
+default install location, do:
+
+$ mkdir -p $HOME/opt
+$ tar -C $HOME/opt -xjf cross-arm-linux-gnueabi-gcc-linaro-4.8-2014.04.tar.gz
+
+The compile/link utilities are in: $HOME/opt/cross-gcc-linaro/bin/
+
+Once you have installed the toolchain, you can free up disk space by removing
+the directories that were created as part of the toolchain build:
+
+$ rm -rf build src stamp
+
+Install the Kernel Headers
+
+The kernel headers are available in GPL source tarfile, called khdrs.tar.gz.
+Extract khdrs.tar.gz, then untar the kernel header files to overwrite some of
+the toolchain header files:
+
+$ tar -C $HOME/opt/cross-gcc-linaro/arm-linux-gnueabi -xzf khdrs.tar.gz
+
+
+Untarring the OSS Components
+
+If you want to untar all of the components contained in the gzipped tar file,
+you can use the following commands, after untarring the tar file:
+
+$ cd gplrelease
+$ for ii in *.gz
+{
+  dirname=$(echo $ii | sed -e 's:\.tar.gz$::')
+  mkdir -p $dirname
+  tar -C $dirname -xzf $ii
+}
+
+Building Components
+
+NOTE: Some components require other OSS components not included in the GPL
+release.
+
+NOTE: Some components are only partial trees. If you want to build those, you
+will need to download the remainder of the source from the component's site.
+
+Each component (except partial components) has its own build process. Generally,
+the components use an autotools-based build -- but that isn't always the case
+(for example, busybox uses a Kconfig build). You should read through the INSTALL
+(and/or README) file that comes with the component, for details on how to build
+the component.
+
+For components that do use autotools, if their configure supports the --host
+flag, you should be able to cross-compile the component using the usual
+configure/make/make install. For example, the following configure command line
+can be used to build alsa:
+
+./configure --disable-aload --disable-rawmidi --disable-hwdep --disable-seq \
+            --disable-instr --disable-alisp --disable-python \
+            --host=arm-linux-eabi --build=i686-pc-linux-gnu \
+            CFLAGS="-Os -finline-functions -mfloat-abi=softfp -mfpu=neon \
+                    -mtune=cortex-a9 -mcpu=cortex-a9 -ftree-vectorize \
+                    -DLAB126 -DLINUX -fno-omit-frame-pointer -mapcs-frame \
+                    -Wl,-O1 -Wl,--hash-style=gnu" \
+                    CC=$HOME/opt/cross-gcc-linaro/bin/arm-linux-gnueabi-gcc
+
+The LAB126 define enables code changes specific to LAB126 found in our OSS
+distribution.
+
+The exact --disable/--enable configure flags will vary from component to
+component. You should be able to run:
+
+$ ./configure --help
+
+to see a list of the configure flags available for the component.
+
+NOTE: The configure script that comes with util-linux does not provide a --help
+flag, so you should not run that command in util-linux.
+
+The compile and link flags as specified in the CFLAGS var in the above command
+line are what we used and should always be included when building any
+of the components -- the flags just might need to be passed in differently for
+components that have a build process that isn't based on autotools.
+
+For example, the busybox build doesn't use autotools, so there is no configure
+script to run -- you just pass the compile and link flags to the make command
+directly (along with the CROSS_COMPILE var, which contains just the path up to
+but not including gcc):
+
+CFLAGS="-ggdb -fmessage-length=0 -D_FORTIFY_SOURCE=2 -DNDEBUG=1 -DG_DISABLE_ASSERT -Os \
+-finline-functions -mfloat-abi=softfp -mfpu=neon -mtune=cortex-a9 \
+-mcpu=cortex-a9 -ftree-vectorize -DLAB126 -DLINUX -fno-omit-frame-pointer \
+-mapcs-frame" LDFLAGS="-O1 --hash-style=gnu" \
+make CROSS_COMPILE="$HOME/opt/cross-gcc-linaro/bin/arm-linux-gnueabi-"
+
+See the busybox INSTALL file for complete information on the busybox build,
+including how to generate the config file (using menuconfig).
+
