@@ -23,8 +23,6 @@ jobs:
           rm linux-3.0.35.tar.gz 
           tar xzf build_linaro-gcc_4.8.3.tar.gz
           rm build_linaro-gcc_4.8.3.tar.gz
-          tar xzf uboot.tar.gz
-          rm uboot.tar.gz
 
       - name: Commit
         run: |
