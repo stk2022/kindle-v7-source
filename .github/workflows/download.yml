@@ -25,6 +25,7 @@ jobs:
           rm build_linaro-gcc_4.8.3.tar.gz
           tar xzf gcc-linaro-4.8-2014.04.tar.gz
           rm gcc-linaro-4.8-2014.04.tar.gz
+          find . -name "*.tar.gz" -size +95M -delete
 
       - name: Commit
         run: |
